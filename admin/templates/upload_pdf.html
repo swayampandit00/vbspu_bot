@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload PDF - VBSPU Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-upload {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f9fafb;
+        }
+
+        .file-upload:hover {
+            border-color: #4f46e5;
+            background: #f3f4f6;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-icon {
+            font-size: 3rem;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .nav-links a {
+            color: #4f46e5;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #7c3aed;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .category-tag {
+            background: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-tag:hover,
+        .category-tag.active {
+            background: #4f46e5;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 PDF Upload</h1>
+            <p>Upload query-related PDFs for accurate bot responses</p>
+        </div>
+
+        <div class="content">
+            <div class="nav-links">
+                <a href="{{ url_for('admin.dashboard') }}">🏠 Dashboard</a>
+                <a href="{{ url_for('admin.manage_pdfs') }}">📋 Manage PDFs</a>
+                <a href="{{ url_for('admin.logout') }}">🚪 Logout</a>
+            </div>
+
+            <div id="alert" class="alert"></div>
+
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="file">📁 Select PDF File</label>
+                    <div class="file-upload" onclick="document.getElementById('file').click()">
+                        <div class="file-upload-icon">📄</div>
+                        <p><strong>Click to upload PDF</strong></p>
+                        <p>or drag and drop</p>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Maximum file size: 16MB | PDF files only
+                        </p>
+                        <input type="file" id="file" name="file" accept=".pdf" required>
+                    </div>
+                    <div id="fileInfo" style="margin-top: 10px; color: #4b5563;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">📂 Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        <option value="fees">📊 Fees & Payments</option>
+                        <option value="admissions">🎓 Admissions</option>
+                        <option value="courses">📚 Courses & Programs</option>
+                        <option value="exams">📝 Examinations</option>
+                        <option value="results">📈 Results</option>
+                        <option value="notices">📢 Notices & Circulars</option>
+                        <option value="syllabus">📖 Syllabus</option>
+                        <option value="timetable">⏰ Timetable</option>
+                        <option value="scholarships">💰 Scholarships</option>
+                        <option value="general">📄 General</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tags">🏷️ Tags (comma separated)</label>
+                    <input type="text" id="tags" name="tags" placeholder="e.g., B.Sc, fees, 2024, undergraduate">
+                    <div class="categories">
+                        <div class="category-tag" onclick="addTag('B.Sc')">B.Sc</div>
+                        <div class="category-tag" onclick="addTag('B.Com')">B.Com</div>
+                        <div class="category-tag" onclick="addTag('B.A')">B.A</div>
+                        <div class="category-tag" onclick="addTag('M.Sc')">M.Sc</div>
+                        <div class="category-tag" onclick="addTag('M.Com')">M.Com</div>
+                        <div class="category-tag" onclick="addTag('MBA')">MBA</div>
+                        <div class="category-tag" onclick="addTag('fees')">fees</div>
+                        <div class="category-tag" onclick="addTag('admission')">admission</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">📝 Description</label>
+                    <textarea id="description" name="description" placeholder="Describe what this PDF contains..."></textarea>
+                </div>
+
+                <button type="submit" class="btn" id="uploadBtn">
+                    🚀 Upload PDF
+                </button>
+
+                <div class="progress" id="progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // File selection handling
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileInfo = document.getElementById('fileInfo');
+            
+            if (file) {
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                fileInfo.innerHTML = `
+                    <strong>Selected:</strong> ${file.name}<br>
+                    <strong>Size:</strong> ${fileSize} MB<br>
+                    <strong>Type:</strong> ${file.type || 'Unknown'}
+                `;
+                
+                if (file.size > 16 * 1024 * 1024) {
+                    showAlert('File size exceeds 16MB limit', 'error');
+                    document.getElementById('uploadBtn').disabled = true;
+                } else {
+                    hideAlert();
+                    document.getElementById('uploadBtn').disabled = false;
+                }
+            } else {
+                fileInfo.innerHTML = '';
+            }
+        });
+
+        // Drag and drop
+        const fileUpload = document.querySelector('.file-upload');
+        
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.style.borderColor = '#4f46e5';
+            fileUpload.style.background = '#f3f4f6';
+        });
+
+        fileUpload.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileUpload.style.borderColor = '#d1d5db';
+            fileUpload.style.background = '#f9fafb';
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.style.borderColor = '#d1d5db';
+            fileUpload.style.background = '#f9fafb';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('file').files = files;
+                document.getElementById('file').dispatchEvent(new Event('change'));
+            }
+        });
+
+        // Tag management
+        function addTag(tag) {
+            const tagsInput = document.getElementById('tags');
+            const currentTags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t);
+            
+            if (!currentTags.includes(tag)) {
+                currentTags.push(tag);
+                tagsInput.value = currentTags.join(', ');
+            }
+        }
+
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressBar = document.getElementById('progress');
+            const progressBarBar = document.getElementById('progressBar');
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Uploading...';
+            progressBar.style.display = 'block';
+            
+            try {
+                const response = await fetch('/admin/upload-pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('✅ PDF uploaded successfully!', 'success');
+                    progressBarBar.style.width = '100%';
+                    
+                    // Reset form
+                    this.reset();
+                    document.getElementById('fileInfo').innerHTML = '';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/admin/manage-pdfs';
+                    }, 2000);
+                } else {
+                    showAlert(result.error || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.', 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '🚀 Upload PDF';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressBarBar.style.width = '0%';
+                }, 2000);
+            }
+        });
+
+        // Alert functions
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+        }
+
+        function hideAlert() {
+            const alert = document.getElementById('alert');
+            alert.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
